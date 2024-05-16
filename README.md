@@ -13,7 +13,7 @@ ARP spoofing, also known as ARP poisoning, is a technique used by attackers to i
         ```
 
 2. **Install Dependencies:**
-    - Ensure you have [pip](https://pypi.org/project/pip/) installed on your machine.
+    - Ensure you have [pip](https://pypi.org/project/pip/) and [Python](https://www.python.org/downloads/) installed on your machine.
     - Install the required Python module `scapy` using the following command:
         ```sh
         pip3 install scapy
